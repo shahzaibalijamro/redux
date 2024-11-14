@@ -1,43 +1,36 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-import store from "@/config/redux/store/store.js"
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import store from "@/config/redux/store/store.js";
 import { Provider } from 'react-redux';
+import MyApp from './app';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
+export default function Layout() {
+  const [userData, setUserData] = useState<any>(null);
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+    const getUser = async () => {
+      const user = await AsyncStorage.getItem('user-profile');
+      if (user) {
+        const userFetch = JSON.parse(user)
+        console.log(userFetch);
+        setUserData(userFetch)
+      }
     }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
+    getUser()
+  }, [])
+  console.log(userData);
+  const logOutUser = () => {
+    const storeData = async () => {
+      try {
+        await AsyncStorage.setItem('yetToSetup', 'false');
+      } catch (e) {
+        console.log(e);
+      }
+    };
+    storeData()
   }
-
   return (
     <Provider store={store}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
+      <MyApp/>
     </Provider>
   );
 }
